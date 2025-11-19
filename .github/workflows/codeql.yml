@@ -1,47 +1,37 @@
+﻿name: CodeQL
 on:
+  push: { branches: [ "main" ] }
+  pull_request: { branches: [ "main" ] }
 
-  push:
+permissions:
+  contents: read
+  security-events: write
+  actions: read
 
-    branches: [ "main" ]  
-    
-    workflow_dispatch:
 
 jobs:
-
-  codeql:
-
-    name: CodeQL Analysis
-
+  analyze:
     runs-on: ubuntu-latest
-
-
-
+    env:
+      CODEQL_EXTRACTOR_JAVA_OPTION_BUILDLESS: "true"
     steps:
+      - uses: actions/checkout@v4
 
-    - name: Checkout repository
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
 
-      uses: actions/checkout@v3
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: java
+          build-mode: none
 
-
-    - name: Initialize CodeQL
-
-      uses: github/codeql-action/init@v2
-
-      with:
-
-        languages: java
-        source-root: src
-
-
-    - name: Run CodeQL Analysis
-
-      uses: github/codeql-action/analyze@v2
-
-    - name: Perform CodeQL Analysis
-
-      uses: github/codeql-action/analyze@v3
-
-      with:
-        
-          verbosity: debug
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:java"
       
+      - uses: github/codeql-action/analyze@v3
+        with:
+          verbosity: debug
+     
