@@ -1,0 +1,45 @@
+on:
+
+  push:
+
+    branches: [ main ]   # main 브랜치에 코드가 push 될 때마다 실행
+
+
+
+jobs:
+
+  codeql:
+
+    name: CodeQL Analysis
+
+    runs-on: ubuntu-latest
+
+
+
+    steps:
+
+    - name: Checkout repository
+
+      uses: actions/checkout@v3
+
+
+
+    - name: Initialize CodeQL
+
+      uses: github/codeql-action/init@v2
+
+      with:
+
+        languages: java
+
+
+
+    - name: Autobuild
+
+      uses: github/codeql-action/autobuild@v2
+
+
+
+    - name: Run CodeQL Analysis
+
+      uses: github/codeql-action/analyze@v2
