@@ -33,13 +33,6 @@ jobs:
         languages: java
 
 
-
-    - name: Autobuild
-
-      uses: github/codeql-action/autobuild@v2
-
-
-
     - name: Run CodeQL Analysis
 
       uses: github/codeql-action/analyze@v2
