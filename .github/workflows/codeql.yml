@@ -44,8 +44,11 @@ jobs:
 
       uses: github/codeql-action/analyze@v2
 
-- name: Perform CodeQL Analysis
-  uses: github/codeql-action/analyze@v3
-  with:
-    verbosity: debug
+    - name: Perform CodeQL Analysis
+
+      uses: github/codeql-action/analyze@v3
+
+      with:
+        
+          verbosity: debug
       
