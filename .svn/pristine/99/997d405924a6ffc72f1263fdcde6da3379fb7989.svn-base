@@ -1,0 +1,46 @@
+package sdiag.main.web;
+
+import java.util.HashMap;
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import sdiag.board.service.NoticeService;
+import sdiag.board.service.NoticeVO;
+import sdiag.main.service.UserMainService;
+import sdiag.man.service.SearchVO;
+
+@Controller
+public class UserMainController {
+	@Resource(name = "UserMainService")
+	protected UserMainService userMainService;
+	
+	
+	/**
+	 * 메인화면 class
+	 * @throws Exception 
+	 */
+	@RequestMapping("/main/userMain.do")
+	private String userMain(HttpServletRequest request,
+			HttpServletResponse response,
+			ModelMap model) throws Exception{
+		
+		SearchVO searchVO = new SearchVO();
+		searchVO.setPageUnit(10);
+		
+		HashMap<String,Object> retMap = userMainService.getNoticeList(searchVO);
+		List<NoticeVO> noticeList = (List<NoticeVO>)retMap.get("list");
+		
+		model.addAttribute("noticeList", noticeList);
+		
+		
+		return "main/userMain";
+		
+	}
+}

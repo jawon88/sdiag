@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="report">
+
+	<typeAlias alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	<typeAlias alias="dashSearchVO" type="sdiag.dash.service.DashboardSearchVO" />
+	
+	<!-- 개인의 지수화정책 항목별 총건수 및 점수, 진단상태 -->
+ 	<select id="ReportDAO.getPerPolItemCountScoreStatus" parameterClass="dashSearchVO" resultClass="egovMap" remapResults="true">
+ 	<![CDATA[	
+    SELECT
+		to_char(to_date(I.idx_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD') idxrgdtdate,
+        I.emp_no empno,
+        (
+			select org_nm from org_group where org_code in	(
+				select org_code from org_user where emp_no=#emp_no#
+			)
+        ) orgnm,        
+        (
+			select emp_nm from org_user where emp_no=#emp_no#
+        ) empnm,
+        I.mac,
+        I.ip,        
+        P.sec_pol_desc descname,
+        I.count,
+        coalesce(I.score,100) score,
+        /*case       
+            WHEN coalesce(I.score,100) >= 90 THEN '양호'       
+            else '취약'      
+        end as idxstatus */
+         CASE WHEN coalesce(I.score,100) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN coalesce(I.score,100) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+		      AND coalesce(I.score,100) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END 
+		END idxstatus
+    FROM
+        "user_idx_info" I,
+        "pol_idx" P   
+    WHERE 1=1
+        AND I.emp_no =  #emp_no#    
+        AND I.pol_idx_id = P.sec_pol_id     
+        AND I.idx_rgdt_date in (
+				#begin_date#            
+	        )
+        AND P.use_indc='Y'
+ 	]]>
+ 	</select>        	
+	
+	<!-- 사용자별 발생건수 및 점수 = 팀원의 전체 건수 및 점수, 진단상태 => 날짜, 조직, 사번/이름, Mac/IP, 전체건수, 평균, 진단결과 -->
+ 	<select id="ReportDAO.getPerCountScoreStatus" parameterClass="dashSearchVO" resultClass="egovMap" remapResults="true">
+ 	<![CDATA[	
+    SELECT
+        G.org_code orgcode,
+        U.emp_no empno,
+        U.emp_nm empnm,
+        G.org_nm orgnm,
+        coalesce(I.mac, '-') mac,
+        coalesce(I.ip, '') ip,
+        coalesce(sum(I.count), 0) count,
+        coalesce(ROUND(AVG(I.score)),100) score,
+        /*CASE                  
+            WHEN coalesce(ROUND(AVG(I.score)), 100) >= coalesce(90,0) THEN '양호'                  
+            ELSE '취약'                
+        END idxstatus,*/
+        CASE WHEN coalesce(ROUND(AVG(I.score)), 100) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN coalesce(ROUND(AVG(I.score)), 100) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+			AND coalesce(ROUND(AVG(I.score)), 100) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END
+		END idxstatus,
+        coalesce(to_char(to_date(I.idx_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD'), to_char(to_date(#begin_date#, 'YYYYMMDD'), 'YYYY-MM-DD')) regdate   
+    FROM
+        "org_user" U   
+    LEFT JOIN "org_group" G ON U.org_code=G.org_code   
+    LEFT JOIN "user_idx_info" I ON U.emp_no=I.emp_no     
+    	AND I.idx_rgdt_date in (
+                #begin_date#     
+            )     
+    WHERE 1=1
+        AND U.org_code= #org_upper#
+    GROUP BY
+        G.org_code,
+        U.emp_no,
+        U.emp_nm,
+        G.org_nm,
+        I.mac,
+        I.IP,
+        I.idx_rgdt_date
+    ORDER BY count desc, score desc;
+        
+ 	]]>
+ 	</select>	
+	
+	<!-- 조직별 발생건수 및 점수 => 조직의 지수화정책 대분류 항목별(A01, B01, D01)  전체건수, 평균, 진단상태 -->
+ 	<select id="ReportDAO.getOrgPolItemCountScoreStatus" parameterClass="dashSearchVO" resultClass="egovMap">
+ 	<![CDATA[
+	
+	SELECT 
+	
+		sumrgdt,
+		orgcode, 
+		orgnm,
+		MAX(CASE WHEN diagmajrcode = (select diag_majr_code from diag_item_code where diag_majr_code = diag_minr_code and ordr='1') THEN count ELSE 0 END) AS diagdesc1,
+		MAX(CASE WHEN diagmajrcode = (select diag_majr_code from diag_item_code where diag_majr_code = diag_minr_code and ordr='2') THEN count ELSE 0 END) AS diagdesc2,
+		MAX(CASE WHEN diagmajrcode = (select diag_majr_code from diag_item_code where diag_majr_code = diag_minr_code and ordr='3') THEN count ELSE 0 END) AS diagdesc3,
+		MAX(CASE WHEN diagmajrcode = (select diag_majr_code from diag_item_code where diag_majr_code = diag_minr_code and ordr='5') THEN count ELSE 0 END) AS diagdesc5,
+		COALESCE(SUM(count), 0) count,
+		COALESCE(ROUND(avg(avg)), 0) avg,
+		/*
+		CASE 
+		    WHEN coalesce(round(avg(avg)),  0) >= (SELECT CAST(code_desc as int)  FROM
+			"code_info" 
+		    WHERE
+			majr_code='C02' 
+			AND minr_code='01') THEN '양호' 
+		    ELSE '취약' 
+		END polstat
+		*/
+		 CASE WHEN coalesce(round(avg(avg)),  0) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN coalesce(round(avg(avg)),  0) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+		      AND coalesce(round(avg(avg)),  0) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END 
+		END polstat
+	FROM
+	(
+		SELECT 
+			coalesce(to_char(to_date(S.sum_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD'), to_char(to_date(#begin_date#, 'YYYYMMDD'), 'YYYY-MM-DD')) sumrgdt,
+			A.orgcode, A.orgnm, 
+			P.diag_majr_code diagmajrcode, 
+			D.diag_desc,
+			sum(S.tot_count) count,
+			avg(S.avg) avg
+	
+		FROM
+		(
+		    SELECT
+				G.org_code orgcode, 
+				G.org_nm orgnm   
+		    FROM "org_group" G   
+		    WHERE G.use_indc='1' AND
+				G.upper_org_code = #org_upper#
+				
+				/*in (*/
+				/*    SELECT */
+				/*		G.org_code orgcode */
+				/*    FROM org_user U   */
+				/*    LEFT JOIN org_group G ON G.org_cap_no=U.emp_no   */
+				/*    WHERE emp_no= '10078100' */
+				/* ) */
+
+		    ORDER BY G.org_order
+		) A
+		
+		LEFT JOIN pol_sum_info S ON S.org_code=A.orgcode AND S.sum_rgdt_date in( #begin_date# )
+		LEFT JOIN pol_idx P ON P.sec_pol_id=S.pol_idx_id AND P.use_indc='Y'
+		LEFT JOIN diag_item_code D ON D.diag_minr_code = P.diag_majr_code AND D.use_indc='Y'
+	
+		GROUP BY orgcode, orgnm, P.diag_majr_code, diag_desc, sum_rgdt_date
+	
+	) AA
+	
+	GROUP BY orgcode, orgnm, sumrgdt
+	ORDER BY polstat desc, orgnm 
+
+ 	]]>
+ 	</select>	
+ 	
+ 	<!-- 조직별 발생건수 및 점수 => 조직의 지수화정책 대분류 항목별(A01, B01, D01)  전체건수, 평균, 진단상태 (부서진단)-->
+ 	<select id="ReportDAO.getOrgPolItemCountScoreStatusBuseo" parameterClass="dashSearchVO" resultClass="egovMap">
+ 	<![CDATA[
+	
+	SELECT 
+	
+		sumrgdt,
+		orgcode, 
+		orgnm,
+		MAX(CASE WHEN diagmajrcode = (select diag_majr_code from diag_item_code where diag_majr_code = diag_minr_code and ordr='4') THEN count ELSE 0 END) AS diagdesc1,
+		COALESCE(SUM(count), 0) count,
+		COALESCE(ROUND(avg(avg)), 0) avg,
+		/*
+		CASE 
+		    WHEN coalesce(round(avg(avg)), 0) >= (SELECT
+			CAST(code_desc as int) 
+		    FROM
+			"code_info" 
+		    WHERE
+			majr_code='C02' 
+			AND minr_code='01') THEN '양호' 
+		    ELSE '취약' 
+		END polstat
+		*/
+		CASE WHEN coalesce(round(avg(avg)), 0) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN coalesce(round(avg(avg)), 0) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+		      AND coalesce(round(avg(avg)), 0) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END 
+		END polstat
+	FROM
+	(
+		SELECT 
+			coalesce(to_char(to_date(S.sum_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD'), to_char(to_date(#begin_date#, 'YYYYMMDD'), 'YYYY-MM-DD')) sumrgdt,
+			A.orgcode, A.orgnm, 
+			P.diag_majr_code diagmajrcode, 
+			D.diag_desc,
+			sum(S.tot_count) count,
+			avg(S.avg) avg
+	
+		FROM
+		(
+		    SELECT
+				G.org_code orgcode, 
+				G.org_nm orgnm   
+		    FROM "org_group" G   
+		    WHERE G.use_indc='1' AND 
+	]]>	  
+	<isEqual property="isSubOrg" compareValue="Y">
+		G.upper_org_code = #org_upper#
+	</isEqual>
+	<isEqual property="isSubOrg" compareValue="N">
+		G.org_code = #org_upper#
+	</isEqual>
+	<![CDATA[	  
+				
+				
+		    ORDER BY G.org_order
+		) A
+		
+		LEFT JOIN buseo_pol_sum_info S ON S.org_code=A.orgcode AND S.sum_rgdt_date in( #begin_date# )
+		LEFT JOIN pol_idx P ON P.sec_pol_id=S.pol_idx_id AND P.use_indc='Y'
+		LEFT JOIN diag_item_code D ON D.diag_minr_code = P.diag_majr_code AND D.use_indc='Y'
+	
+		GROUP BY orgcode, orgnm, P.diag_majr_code, diag_desc, sum_rgdt_date
+	
+	) AA
+	
+	GROUP BY orgcode, orgnm, sumrgdt
+	ORDER BY polstat desc, orgnm 
+
+ 	]]>
+ 	</select>	
+	
+	
+	<!-- [1]조직 정책별 발생건수 및 점수, 진단상태 => 진단날짜, 진단명, 점검명, 정책명, 건수, 점수, 진단결과 -->
+ 	<select id="ReportDAO.getOrgDiagItemCountScoreStatus" parameterClass="dashSearchVO" resultClass="egovMap" remapResults="true">
+ 	<![CDATA[	
+
+	SELECT
+		to_char(to_date(I.sum_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD') sumrgdtdate
+		, I.org_nm orgnm
+		, C.diag_desc majrdiagdesc
+		, D.diag_desc minrdiagdesc
+		, P.sec_pol_desc secpoldesc
+		, I.tot_count totcount
+		, I.avg avg ,
+		/*
+		CASE                  
+		    WHEN ROUND(I.avg) >= coalesce(90,0) THEN '양호' ELSE '취약'                
+		END idxstatus
+		*/
+		CASE WHEN ROUND(I.avg) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN ROUND(I.avg) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+		      AND ROUND(I.avg) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END 
+		END idxstatus
+	FROM pol_sum_info I
+	LEFT JOIN pol_idx P on P.sec_pol_id=I.pol_idx_id AND P.use_indc='Y'
+	LEFT JOIN diag_item_code D on D.diag_majr_code=P.diag_majr_code AND D.diag_minr_code=P.diag_minr_code
+	LEFT JOIN diag_item_code C on D.diag_majr_code=C.diag_majr_code AND C.diag_majr_code=C.diag_minr_code
+	WHERE 1=1
+		AND org_code=#org_upper#
+		AND I.sum_rgdt_date=#begin_date#
+	ORDER BY D.diag_majr_code ,C.diag_majr_code
+ 	]]>
+ 	</select>	
+	<!-- [1]조직 정책별 발생건수 및 점수, 진단상태 => 진단날짜, 진단명, 점검명, 정책명, 건수, 점수, 진단결과 (부서진단)-->
+ 	<select id="ReportDAO.getOrgDiagItemCountScoreStatusBuseo" parameterClass="dashSearchVO" resultClass="egovMap" remapResults="true">
+ 	<![CDATA[	
+
+	SELECT
+		to_char(to_date(I.sum_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD') sumrgdtdate
+		, I.org_nm orgnm
+		, C.diag_desc majrdiagdesc
+		, D.diag_desc minrdiagdesc
+		, P.sec_pol_desc secpoldesc
+		, I.tot_count totcount
+		, I.avg avg ,
+		/*
+		CASE                  
+		    WHEN ROUND(I.avg) >= coalesce(90,0) THEN '양호' ELSE '취약'                
+		END idxstatus
+		*/
+		CASE WHEN ROUND(I.avg) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN ROUND(I.avg) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+		      AND ROUND(I.avg) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END 
+		END idxstatus
+	FROM buseo_pol_sum_info I
+	LEFT JOIN pol_idx P on P.sec_pol_id=I.pol_idx_id AND P.use_indc='Y'
+	LEFT JOIN diag_item_code D on D.diag_majr_code=P.diag_majr_code AND D.diag_minr_code=P.diag_minr_code
+	LEFT JOIN diag_item_code C on D.diag_majr_code=C.diag_majr_code AND C.diag_majr_code=C.diag_minr_code
+	WHERE 1=1
+		AND org_code=#org_upper#
+		AND I.sum_rgdt_date=#begin_date#
+	ORDER BY D.diag_majr_code ,C.diag_majr_code
+ 	]]>
+ 	</select>	
+
+ 	
+ 	<!-- 개인의 진단항목별 전체건수 및 점수 @emp_no -->
+ 	<select id="ReportDAO.getPersonalPolcount" parameterClass="dashSearchVO" resultClass="egovMap" remapResults="true">
+ 	<![CDATA[ 	
+ 	
+    SELECT
+        D.diag_majr_code diagmajrcode,
+        D.diag_desc diagdesc,
+        coalesce(sum(I.count),0) || '건' count,
+        coalesce(ROUND(avg(score)), 100) score
+    FROM
+        diag_item_code D    
+    LEFT JOIN
+        pol_idx P 
+            ON P.DIAG_MAJR_CODE=D.DIAG_MAJR_CODE 
+            AND P.use_indc='Y'
+    LEFT JOIN
+        user_idx_info I 
+            ON  I.pol_idx_id=P.sec_pol_id      
+            AND I.EMP_NO=#emp_no#
+            AND idx_rgdt_date=#begin_date#      
+    WHERE 1=1
+        AND D.use_indc='Y'     
+        AND D.diag_majr_code=D.diag_minr_code 
+        AND D.buseo_indc='N'   
+    GROUP BY
+        D.diag_majr_code,
+        D.diag_desc    
+    ORDER BY
+        D.diag_majr_code  		
+
+
+ 	]]>
+ 	</select>
+ 	
+ 	<!-- 팀 조직의 진단항목별 전체건수 및 점수 @org_code -->
+ 	<select id="ReportDAO.getOrgPolTotcountAvg" parameterClass="dashSearchVO" resultClass="egovMap" remapResults="true">
+ 	<![CDATA[
+ 	 	
+ 	SELECT
+        D.diag_majr_code diagmajrcode,
+        D.diag_desc diagdesc,
+        coalesce(sum(S.tot_count),
+        0) || '건'  count,
+        trunc(ROUND(avg(coalesce(S.avg, 100)), 3)) avg    
+    FROM
+        diag_item_code D    
+    LEFT JOIN
+        pol_idx P 
+            ON P.diag_majr_code=D.diag_majr_code AND P.use_indc='Y'
+    LEFT JOIN
+        pol_sum_info S 
+            ON  S.pol_idx_id = P.sec_pol_id      
+            AND S.org_code = #org_upper#
+            AND sum_rgdt_date in (
+                #begin_date#      
+            )    
+    WHERE 1=1
+        AND D.use_indc = 'Y'     
+        AND D.diag_majr_code=D.diag_minr_code   
+        AND D.buseo_indc='N' 
+    GROUP BY
+        D.diag_majr_code,
+        D.diag_desc    
+    ORDER BY
+        D.diag_majr_code
+        
+ 	]]>
+ 	</select>
+ 	
+ 	<!-- 팀 조직의 진단항목별 전체건수 및 점수 @org_code (부서진단) -->
+ 	<select id="ReportDAO.getOrgPolTotcountAvgBuseo" parameterClass="dashSearchVO" resultClass="egovMap" remapResults="true">
+ 	<![CDATA[
+ 	 	
+ 	SELECT
+        D.diag_majr_code diagmajrcode,
+        D.diag_desc diagdesc,
+        coalesce(sum(S.tot_count),
+        0) || '건'  count,
+        coalesce(ROUND(avg(S.avg)), 100) avg  
+    FROM
+        diag_item_code D    
+    LEFT JOIN
+        pol_idx P 
+            ON P.diag_majr_code=D.diag_majr_code AND P.use_indc='Y'
+    LEFT JOIN
+        buseo_pol_sum_info S 
+            ON  S.pol_idx_id = P.sec_pol_id      
+            AND S.org_code = #org_upper#
+            AND sum_rgdt_date=#begin_date#
+    WHERE 1=1
+        AND D.use_indc = 'Y'     
+        AND D.diag_majr_code=D.diag_minr_code   
+        AND D.buseo_indc='Y' 
+    GROUP BY
+        D.diag_majr_code,
+        D.diag_desc    
+    ORDER BY
+        D.diag_majr_code
+        
+ 	]]>
+ 	</select>
+ 	
+	<!-- 선택 조직 조회 -->
+
+ 	<select id="ReportDAO.getOrgSelectName" parameterClass="dashSearchVO" resultClass="string" remapResults="true">
+ 	<![CDATA[
+ 	 	
+	SELECT 
+	org_nm orgnm
+	FROM org_group
+	WHERE org_code=#org_upper#
+        
+ 	]]>
+ 	</select>
+	
+	<!-- ExportExcel :	ReportDAO.getOrgPolItemCountScoreStatusExportExcel         -->
+	<!-- 조직별 발생건수 및 점수 => 조직의 지수화정책 대분류 항목별(A01, B01, D01)  전체건수, 평균, 진단상태 -->
+ 	<select id="ReportDAO.getOrgPolItemCountScoreStatusExportExcel" parameterClass="dashSearchVO" resultClass="java.util.LinkedHashMap">
+ 	<![CDATA[
+	
+	SELECT 
+	
+		sumrgdt,
+		orgcode, 
+		orgnm,
+		MAX(CASE WHEN diagmajrcode = (select diag_majr_code from diag_item_code where diag_majr_code = diag_minr_code and ordr='1') THEN count ELSE 0 END) AS diagdesc1,
+		MAX(CASE WHEN diagmajrcode = (select diag_majr_code from diag_item_code where diag_majr_code = diag_minr_code and ordr='2') THEN count ELSE 0 END) AS diagdesc2,
+		MAX(CASE WHEN diagmajrcode = (select diag_majr_code from diag_item_code where diag_majr_code = diag_minr_code and ordr='3') THEN count ELSE 0 END) AS diagdesc3,
+		COALESCE(SUM(count), 0) count,
+		COALESCE(ROUND(avg(avg)), 0) avg,
+		/*
+		CASE 
+		    WHEN coalesce(round(avg(avg)), 0) >= (SELECT
+			CAST(code_desc as int) 
+		    FROM
+			"code_info" 
+		    WHERE
+			majr_code='C02' 
+			AND minr_code='01') THEN '양호' 
+		    ELSE '취약' 
+		END polstat
+		*/
+		CASE WHEN coalesce(round(avg(avg)), 0) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN coalesce(round(avg(avg)), 0) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+		      AND coalesce(round(avg(avg)), 0) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END 
+		END polstat
+	FROM
+	(
+		SELECT 
+			coalesce(to_char(to_date(S.sum_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD'), to_char(to_date(#begin_date#, 'YYYYMMDD'), 'YYYY-MM-DD')) sumrgdt,
+			A.orgcode, A.orgnm, 
+			P.diag_majr_code diagmajrcode, 
+			D.diag_desc,
+			sum(S.tot_count) count,
+			avg(S.avg) avg
+		FROM
+		(
+		    SELECT
+				G.org_code orgcode, 
+				G.org_nm orgnm   
+		    FROM "org_group" G   
+		    WHERE G.use_indc='1' AND
+				G.upper_org_code = #org_upper#
+				
+				/*in (*/
+				/*    SELECT */
+				/*		G.org_code orgcode */
+				/*    FROM org_user U   */
+				/*    LEFT JOIN org_group G ON G.org_cap_no=U.emp_no   */
+				/*    WHERE emp_no= '10078100' */
+				/* ) */
+
+		    ORDER BY G.org_order
+		) A
+		
+		LEFT JOIN pol_sum_info S ON S.org_code=A.orgcode AND S.sum_rgdt_date in( #begin_date# )
+		LEFT JOIN pol_idx P ON P.sec_pol_id=S.pol_idx_id AND P.use_indc='Y'
+		LEFT JOIN diag_item_code D ON D.diag_minr_code = P.diag_majr_code AND D.use_indc='Y'
+		GROUP BY orgcode, orgnm, P.diag_majr_code, diag_desc, sum_rgdt_date
+	
+	) AA
+	
+	GROUP BY orgcode, orgnm, sumrgdt
+	ORDER BY polstat desc, orgnm 
+
+ 	]]>
+ 	</select>
+ 	
+ 
+	<!-- ExportExcel :	ReportDAO.getOrgDiagItemCountScoreStatusExportExcel         -->
+	<!-- [1]조직 정책별 발생건수 및 점수, 진단상태 => 진단날짜, 진단명, 점검명, 정책명, 건수, 점수, 진단결과 -->
+ 	<select id="ReportDAO.getOrgDiagItemCountScoreStatusExportExcel" parameterClass="dashSearchVO" resultClass="java.util.LinkedHashMap">
+ 	<![CDATA[	
+
+	SELECT
+		to_char(to_date(I.sum_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD') sumrgdtdate
+		, I.org_nm orgnm
+		, C.diag_desc majrdiagdesc
+		, D.diag_desc minrdiagdesc
+		, P.sec_pol_desc secpoldesc
+		, I.tot_count totcount
+		, I.avg avg ,
+		/*
+		CASE                  
+		    WHEN ROUND(I.avg) >= coalesce(90,0) THEN '양호' ELSE '취약'                
+		END idxstatus
+		*/
+		CASE WHEN ROUND(I.avg) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN ROUND(I.avg) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+		      AND ROUND(I.avg) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END 
+		END idxstatus
+	FROM pol_sum_info I
+	LEFT JOIN pol_idx P on P.sec_pol_id=I.pol_idx_id AND P.use_indc='Y'
+	LEFT JOIN diag_item_code D on D.diag_majr_code=P.diag_majr_code AND D.diag_minr_code=P.diag_minr_code
+	LEFT JOIN diag_item_code C on D.diag_majr_code=C.diag_majr_code AND C.diag_majr_code=C.diag_minr_code
+	WHERE 1=1
+		AND org_code=#org_upper#
+		AND I.sum_rgdt_date in (
+			#begin_date#
+		)
+        
+ 	]]>
+ 	</select>	
+ 	
+
+	<!-- ExportExcel : 사용자별 발생건수 및 점수 = 팀원의 전체 건수 및 점수, 진단상태 => 날짜, 조직, 사번/이름, Mac/IP, 전체건수, 평균, 진단결과 -->
+ 	<select id="ReportDAO.getPerCountScoreStatusExportExcel" parameterClass="dashSearchVO" resultClass="java.util.LinkedHashMap">
+ 	<![CDATA[	
+    SELECT
+    	coalesce(to_char(to_date(I.idx_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD'), to_char(to_date(#begin_date#, 'YYYYMMDD'), 'YYYY-MM-DD')) regdate,
+        G.org_code orgcode,
+        U.emp_no empno,
+        U.emp_nm empnm,
+        G.org_nm orgnm,
+        coalesce(I.mac, '-') mac,
+        coalesce(I.ip, '') ip,
+        coalesce(sum(I.count), 0) count,
+        coalesce(ROUND(AVG(I.score)),100) score,
+        /*
+        CASE                  
+            WHEN coalesce(ROUND(AVG(I.score)), 100) >= coalesce(90,0) THEN '양호'                  
+            ELSE '취약'                
+        END idxstatus
+        */
+         CASE WHEN coalesce(ROUND(AVG(I.score)), 100) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN coalesce(ROUND(AVG(I.score)), 100) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+		      AND coalesce(ROUND(AVG(I.score)), 100) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END 
+		END idxstatus
+    FROM
+        "org_user" U   
+    LEFT JOIN "org_group" G ON U.org_code=G.org_code   
+    LEFT JOIN "user_idx_info" I ON U.emp_no=I.emp_no     
+    	AND I.idx_rgdt_date=#begin_date#
+    WHERE 1=1
+        AND U.org_code= #org_upper#
+    GROUP BY
+        G.org_code,
+        U.emp_no,
+        U.emp_nm,
+        G.org_nm,
+        I.mac,
+        I.IP,
+        I.idx_rgdt_date
+    ORDER BY count desc, score desc;
+        
+ 	]]>
+ 	</select>
+ 	
+
+	<!-- ExportExcel : 개인의 지수화정책 항목별 총건수 및 점수, 진단상태 -->
+ 	<select id="ReportDAO.getPerPolItemCountScoreStatusExportExcel" parameterClass="dashSearchVO" resultClass="java.util.LinkedHashMap">
+ 	<![CDATA[	
+    SELECT
+		to_char(to_date(I.idx_rgdt_date,'YYYYMMDD'),'YYYY-MM-DD') idxrgdtdate,
+        I.emp_no empno,
+        (
+			select org_nm from org_group where org_code in	(
+				select org_code from org_user where emp_no=#emp_no#
+			)
+        ) orgnm,        
+        (
+			select emp_nm from org_user where emp_no=#emp_no#
+        ) empnm,
+        I.mac,
+        I.ip,        
+        P.sec_pol_desc descname,
+        I.count,
+        coalesce(I.score,100) score,
+        /(
+        case       
+            WHEN coalesce(I.score,100) >= 90 THEN '양호'       
+            else '취약'      
+        end as idxstatus   
+        */
+         CASE WHEN coalesce(I.score,100) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') THEN '양호' ELSE
+			CASE WHEN coalesce(I.score,100) < (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='GOD') 
+		      AND coalesce(I.score,100) >= (SELECT code_desc::integer FROM code_info WHERE majr_code='C04' AND minr_code='WAN') THEN '주의' ELSE '취약' 
+			END 
+		END idxstatus
+    FROM
+        "user_idx_info" I,
+        "pol_idx" P   
+    WHERE 1=1
+        AND I.emp_no =  #emp_no#    
+        AND I.pol_idx_id = P.sec_pol_id     
+        AND I.idx_rgdt_date=#begin_date#
+        AND P.use_indc='Y'
+        AND P.buseo_indc='N'
+ 	]]>
+ 	</select>     
+ 	<!-- ////////////////  월간보고서    ////////////////////// -->   
+ 	<typeAlias alias="reportSearchVO" type="sdiag.report.service.ReportSearchVO" />
+ 	<typeAlias alias="orgResultInfoVO" type="sdiag.report.service.OrgResultInfoVO" />
+ 	
+ 	<!-- 조직 정보 조회 -->
+ 	<select id="report.month.getOrgInfo" parameterClass="reportSearchVO" resultClass="reportSearchVO">
+ 	<![CDATA[
+ 	SELECT
+ 	org_code orgCode 
+	,org_nm orgName
+	,(SELECT COUNT(1) FROM org_group WHERE upper_org_code=#orgCode#) subCount
+	FROM org_group
+	WHERE org_code=#orgCode#
+        
+ 	]]>
+ 	</select>
+ 	
+ 	<!-- 날짜 리스트 조회 -->
+ 	<select id="report.month.getSearchDateList" parameterClass="reportSearchVO" resultClass="reportSearchVO">
+ 	<![CDATA[
+ 	SELECT to_char(date_trunc('day', (to_date(#end_date#, 'YYYY-MM-DD') - offs)), 'YYYY-MM-DD') begin_date
+	FROM generate_series(0, (to_date(#end_date#, 'YYYY-MM-DD') - to_date(#begin_date#, 'YYYY-MM-DD')), 1) offs
+	ORDER BY begin_date;
+    ]]>
+ 	</select>
+ 	
+ 	<!-- 하위 부서 리스트 조회 -->
+ 	<select id="report.month.getOrgListInfo" parameterClass="reportSearchVO" resultClass="orgResultInfoVO">
+ 	<![CDATA[
+ 	WITH orgList(org_code, org_nm, org_order) AS
+	(
+		SELECT org_code
+			, org_nm
+			, org_order
+		FROM org_group
+		WHERE upper_org_code=#orgCode# AND use_indc='1'
+	), polList(sum_rgdt_date, org_code, pol_idx_id, score, count)AS
+	(
+	SELECT sum_rgdt_date
+		,org_code
+		,pol_idx_id
+		,tot_score
+		,tot_count
+	FROM pol_sum_info ps where to_char(to_date(ps.sum_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date#
+	  AND org_code IN (SELECT org_code FROM org_group WHERE upper_org_code=#orgCode# AND use_indc='1')
+	)
+	SELECT 
+		o.org_code
+		,o.org_nm
+		,trunc(round(avg(coalesce(ts.avg, 100)), 3)) avg 
+		,coalesce((SELECT sum(count) FROM polList p WHERE p.org_code=o.org_code ), 0) tot_count
+	FROM total_sum_info ts
+	INNER JOIN orgList o ON o.org_code=ts.org_code
+	WHERE to_char(to_date(ts.sum_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date#
+	GROUP BY o.org_code, o.org_nm, o.org_order
+	ORDER BY o.org_order;
+    ]]>
+ 	</select>
+ 	
+ 	<!-- 조직 사원 리스트 조회 -->
+ 	<select id="report.month.getOrgUserListInfo" parameterClass="reportSearchVO" resultClass="orgResultInfoVO">
+ 	<![CDATA[
+ 	WITH orgList(org_code, org_nm, org_order) AS
+	(
+	SELECT emp_no 
+		,emp_nm
+		,'1' 
+	FROM org_user
+	WHERE org_code=#orgCode# AND stat='1' AND emp_no <> 'admin'
+	), polList(sum_rgdt_date, org_code, pol_idx_id, score, count) AS
+	(
+	SELECT idx_rgdt_date
+		,emp_no
+		,pol_idx_id
+		,score
+		,count
+	FROM user_idx_info WHERE to_char(to_date(idx_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date# 
+	  AND emp_no IN (SELECT emp_no FROM org_user WHERE org_code=#orgCode# AND stat='1' AND emp_no <> 'admin')
+	) SELECT 
+		o.org_code
+		,o.org_nm
+		, trunc(round(avg(coalesce(ts.score, 100)), 3)) avg
+		,coalesce((SELECT sum(count) FROM polList p WHERE p.org_code=o.org_code ), 0) tot_count
+	FROM user_idx_info_day ts
+	INNER JOIN orgList o ON o.org_code=ts.emp_no
+	WHERE to_char(to_date(ts.idx_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date#
+	]]>
+	<isNotEqual prepend="AND" property="emp_no" compareValue="">
+	<![CDATA[
+		 	o.org_code=#emp_no#
+	]]>			
+	</isNotEqual>
+	<![CDATA[ 
+	GROUP  BY o.org_code, o.org_nm
+	ORDER BY o.org_nm;
+    ]]>
+ 	</select>
+ 	
+ 	<!-- 조직 리스트 날짜별 data 조회 -->
+ 	<select id="report.month.getOrgListDataInfo" parameterClass="reportSearchVO" resultClass="orgResultInfoVO">
+ 	<![CDATA[
+ 	SELECT d.date sum_rgdt_date
+		, coalesce(ts.avg, 100) avg
+		, coalesce((select sum(tot_count) from pol_sum_info ps where to_char(to_date(ps.sum_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') = d.date and ps.org_code=#orgCode#), 0) tot_count
+	FROM(
+		SELECT to_char(date_trunc('day', (to_date(#end_date#, 'YYYY-MM-DD') - offs)), 'YYYY-MM-DD') date
+		FROM generate_series(0, (to_date(#end_date#, 'YYYY-MM-DD') - to_date(#begin_date#, 'YYYY-MM-DD')), 1) offs
+	)d
+	LEFT JOIN total_sum_info ts ON ts.org_code=#orgCode# and to_char(to_date(ts.sum_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') =d.date
+	ORDER BY d.date;
+    ]]>
+ 	</select>
+ 	
+ 	<!-- 조직 사원 리스트 날짜별 data 조회 -->
+ 	<select id="report.month.getOrgUserListDataInfo" parameterClass="reportSearchVO" resultClass="orgResultInfoVO">
+ 	<![CDATA[
+ 	SELECT d.date sum_rgdt_date
+		, coalesce(ts.score, 100) avg
+		, coalesce((select sum(count) from user_idx_info ps where to_char(to_date(ps.idx_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') = d.date and ps.emp_no=#orgCode#), 0) tot_count
+	 FROM(
+		SELECT to_char(date_trunc('day', (to_date(#end_date#, 'YYYY-MM-DD') - offs)), 'YYYY-MM-DD') date
+		FROM generate_series(0, (to_date(#end_date#, 'YYYY-MM-DD') - to_date(#begin_date#, 'YYYY-MM-DD')), 1) offs
+	)d
+	LEFT JOIN user_idx_info_day ts ON ts.emp_no=#orgCode# and to_char(to_date(ts.idx_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') =d.date
+	ORDER BY d.date;
+    ]]>
+ 	</select>
+ 	
+ 	<!-- User 전체 건수 및 평균 조회 -->
+ 	<select id="report.month.getUserTotalScoreInfo" parameterClass="reportSearchVO" resultClass="orgResultInfoVO">
+ 	<![CDATA[
+ 	SELECT 
+	ts.emp_no org_code
+	,trunc(round(avg(coalesce(ts.score, 100)), 3)) avg
+	,coalesce((SELECT SUM(count) FROM user_idx_info WHERE to_char(to_date(idx_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date# AND emp_no=#emp_no#), 0) tot_count
+	FROM user_idx_info_day ts
+	WHERE to_char(to_date(ts.idx_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date# and ts.emp_no=#emp_no#
+	GROUP BY ts.emp_no;
+    ]]>
+ 	</select>
+ 	
+ 	<!-- 조직 전체 건수 및 평균 조회 -->
+ 	<select id="report.month.getOrgTotalScoreInfo" parameterClass="reportSearchVO" resultClass="orgResultInfoVO">
+ 	<![CDATA[
+ 	SELECT 
+	 #orgCode# org_code
+	,coalesce(trunc(round(avg(coalesce(ts.avg, 100)), 3)), 100) avg
+	,coalesce((SELECT SUM(tot_count) FROM pol_sum_info WHERE to_char(to_date(sum_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date# AND org_code IN (SELECT org_code FROM org_group WHERE upper_org_code=#orgCode# AND use_indc='1')), 0) tot_count
+	FROM total_sum_info ts
+	WHERE to_char(to_date(ts.sum_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date# and ts.org_code IN (SELECT org_code FROM org_group WHERE upper_org_code=#orgCode# AND use_indc='1');
+	
+    ]]>
+ 	</select>
+ 	<!-- 조직 전체 건수 및 평균 조회 - 하위조직없을때 -->
+ 	<select id="report.month.getSubOrgTotalScoreInfo" parameterClass="reportSearchVO" resultClass="orgResultInfoVO">
+ 	<![CDATA[
+ 	SELECT 
+	 #orgCode# org_code
+	,coalesce(trunc(round(avg(coalesce(ts.avg, 100)), 3)), 100) avg
+	,coalesce((SELECT SUM(tot_count) FROM pol_sum_info WHERE to_char(to_date(sum_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date# AND org_code =#orgCode#), 0) tot_count
+	FROM total_sum_info ts
+	WHERE to_char(to_date(ts.sum_rgdt_date, 'YYYYMMDD'), 'YYYY-MM-DD') BETWEEN #begin_date# AND #end_date# and ts.org_code=#orgCode#;
+	
+    ]]>
+ 	</select>
+ 	<!-- ////////////////  월간보고서  end   ////////////////////// -->  	
+</sqlMap>

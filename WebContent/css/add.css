@@ -1,0 +1,352 @@
+@charset "utf-8";
+@import url("./fonts.css");
+
+.textAL {
+  text-align: left;
+}
+.mgR20 {
+  margin-right: 20px;
+}
+.mgT20 {
+  margin-top: 20px;
+}
+
+/* ************************************************************************* */
+/* KT Bold, Light */
+.ktb {
+  font-family: "KTB", "Malgun Gothic", sans-serif;
+  letter-spacing: 0;
+}
+.ktl {
+  font-family: "KTL", "Malgun Gothic", sans-serif;
+  letter-spacing: 0;
+}
+.popBody {
+  min-width: 300px;
+}
+.wrap {
+  width: 100%;
+}
+.otpWrap {
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.otpWrap .textN {
+  font-size: 14px;
+  line-height: 35px;
+  padding: 15px 10px 10px;
+  font-weight: 700;
+  color: #000;
+}
+
+.inputBox {
+  width: 100%;
+  border-bottom: 1px solid #ccc;
+}
+.otpInput {
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #000;
+}
+
+.inputBox > ul > li {
+  display: inline-block;
+  padding: 5px 10px 20px;
+}
+.otpInput {
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #000;
+}
+.inputBox > ul > li > span {
+  color: #f01d13;
+  font-weight: 700;
+}
+
+/* 버튼 */
+.pop_btn {
+  padding: 7px 20px;
+  border-radius: 8px;
+  border: 1px solid #3c7dbe;
+  background-color: #fff;
+  color: #3c7dbe;
+  font-weight: 700;
+}
+.btn_blue {
+  background: #5499de;
+  color: #fff;
+}
+
+.faqSearchBox {
+  width: 100%;
+  position: relative;
+}
+.faqSearchBox li {
+  display: inline-block;
+}
+.faqTit {
+  margin-left: 10px;
+}
+
+.faqSearchBox li:nth-child(2) {
+  width: 60px;
+}
+.formSearch {
+  display: block;
+  position: relative;
+  width: 100%;
+  vertical-align: middle;
+  top: -3px;
+}
+
+.formSearch .input {
+  display: block;
+  width: 100%;
+  padding: 2px;
+  border: #a9a9a9;
+}
+.formSearch input[type="text"] {
+  width: 100%;
+  height: 18px;
+  padding: 0 25px 3px 18px;
+  line-height: 18px;
+  font-size: 14px;
+  color: #767676;
+  box-shadow: none;
+  background: #fff url(../images/btn_icon_search.png) no-repeat right center;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid #e7e7e7;
+  background-color: #f7f7f7;
+}
+.btn_more {
+  position: absolute;
+  right: 0;
+  top: 15px;
+}
+
+/* 사이드메뉴 추가 */
+
+.aside ul li.infocheck_on {
+  height: 80px;
+  font-size: 12px;
+  letter-spacing: -1px;
+  background-color: #c7c7c7;
+  border-bottom: 1px solid #ccc;
+}
+.aside ul li.infocheck {
+  height: 80px;
+  font-size: 12px;
+  letter-spacing: -1px;
+}
+
+/* 예외권한  */
+/* .graph2_block1 {
+  position: relative;
+  display: ;
+} */
+.exauthWrap {
+  position: absolute;
+  top: 32px;
+  margin-left: 20px;
+
+  line-height: 25px;
+  max-width: 320px;
+}
+.exauth {
+  border: 1px solid #f01d13;
+  color: #f01d13;
+  padding: 5px 10px !important;
+}
+.exauth > a {
+  color: #f01d13;
+}
+.exauth > a::after {
+  content: ",";
+}
+.exauth > a:last-child::after {
+  content: none;
+}
+/*popup*/
+.popup_layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  width: 100%;
+  height: 100%;
+  /* background-color: rgba(0, 0, 0, 0.4); */
+}
+/*팝업 박스*/
+.popup_box {
+  position: relative;
+  top: 50%;
+  left: 10%;
+  transform: translate(-50%, -50%);
+  z-index: 1002;
+  box-sizing: border-box;
+  background: #fff;
+  padding: 0 !important;
+  box-shadow: 2px 5px 10px 0px rgba(0, 0, 0, 0.35);
+  -webkit-box-shadow: 2px 5px 10px 0px rgba(0, 0, 0, 0.35);
+  -moz-box-shadow: 2px 5px 10px 0px rgba(0, 0, 0, 0.35);
+}
+/*컨텐츠 영역*/
+.popup_box .popup_cont {
+  padding: 0px;
+  line-height: 1.4rem;
+  font-size: 14px;
+  position: relative;
+  width: 100%;
+}
+
+/*오버레이 뒷배경
+.popup_overlay {
+  position: fixed;
+  top: 0px;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1001;
+  background: rgba(0, 0, 0, 0.5);
+}*/
+/*popup*/
+
+.popTit {
+  width: 100%;
+  background-color: #5499de;
+  height: 25px;
+  padding: 10px 0px 7px !important;
+  color: #fff;
+}
+.btn_close {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+}
+.popinputWrap {
+  width: 100%;
+  padding: 0 0px 10px !important;
+}
+.popinputWrap > p {
+  display: block;
+  text-align: left;
+  padding: 15px 20px 5px;
+}
+.popinputWrap > p::before {
+  content: "·";
+  display: inline-block;
+  font-size: 36px;
+  font-weight: 700;
+  margin-right: 5px;
+  vertical-align: bottom;
+}
+.exauth_input {
+  padding: 5px;
+  border: 1px solid #ccc;
+}
+
+/* 시큐리티 체크 */
+.securityWrap {
+  width: 942px;
+  height: 680px;
+  display: inline-block;
+}
+
+.security_tit {
+  position: relative;
+  height: 300px;
+  background: url(../images/securitycheck_bg.png) no-repeat;
+  background-size: contain;
+}
+.security_tit span {
+  position: absolute;
+  bottom: 35px;
+  right: 58px;
+}
+.security_tit span a {
+  background: url(../images/btn_sc_start_off.png) no-repeat;
+  text-indent: -99999px;
+  width: 173px;
+  height: 53px;
+  display: inline-block;
+}
+.security_tit span a:hover {
+  background: url(../images/btn_sc_start_on.png) no-repeat;
+}
+.security_tit2 {
+  position: relative;
+  height: 210px;
+  background: url(../images/securitycheck_test.png) no-repeat;
+}
+.security_tit2 span {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+.security_tit2 span a {
+  background: url(../images/btn_sc_close.png) no-repeat;
+  text-indent: -99999px;
+  width: 21px;
+  height: 21px;
+  display: inline-block;
+}
+.security_box {
+  width: 942px;
+  min-height: 340px;
+  height: auto;
+  margin: 0 auto;
+  display: inline-block;
+  text-align: center;
+  padding: 0 20px 0px 20px;
+  background: #ffffff;
+}
+.security_em {
+  font-size: 30px;
+  font-weight: bold;
+  letter-spacing: -2px;
+  color: #1c1350;
+  line-height: 40px;
+  padding: 40px 0;
+  display: inline-block;
+}
+.security_em2 {
+  width: 100%;
+  font-family: "맑은 고딕";
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: -1px;
+  color: #7d7d7d;
+  text-align: center;
+  padding: 10px 0 0 0;
+}
+.security_em3 {
+  width: 100%;
+  font-family: "돋움";
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: -1px;
+  color: #323232;
+  text-align: center;
+  padding: 10px 0 0 0;
+}
+.security_box table {
+  width: 600px;
+  border: solid 1px #d7d7d7;
+  margin: 0 auto;
+  font-family: "맑은 고딕";
+  font-size: 15px;
+  color: #323232;
+}
+.security_box table th {
+  border: solid 1px #d7d7d7;
+  padding: 20px 0;
+  background: #f7f7f7;
+}
+.security_box table td {
+  border: solid 1px #d7d7d7;
+  padding: 20px 20px;
+  text-align: left;
+}

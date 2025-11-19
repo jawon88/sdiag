@@ -1,0 +1,163 @@
+package sdiag.main.service;
+
+/**
+ * 사용자, 사용자 팀, 사용자 상위 팀 보안점수 정보 VO클래스로 구성한다.
+ * @author 공통서비스 개발
+ * @since 2017.02.01
+ * @version 1.0
+ * @see
+ *
+ * 
+ */
+public class UserMainIdxInfoVO{
+
+	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	// 사번
+	private String emp_no;
+	// 사용자 이름
+	private String emp_nm;
+	// 등록 일자             
+	private String rgdt_date;
+	// 수정된 점수                
+	private String scor_curr;  
+	// 점수                
+	private String score;  
+	// 등록 연도                
+	private String year_val;  
+	// 등록 일자               
+	private String day_val;  
+	// 등록 월              
+	private String month_val;  
+	// 이메일                
+	private String email;
+	//사용자 팀 코드               
+	private String u_org_code; 
+	//사용자 팀 명                
+	private String u_org_nm;  
+	//사용자  팀 사원수                
+	private String u_tot_emp;  
+	//사용자 팀 점수 평균                
+	private String u_avg;  
+	//사용자 상위 팀 코드               
+	private String upper_org_code;  
+	//사용자 상위 팀 명                
+	private String upper_org_nm;  
+	//사용자 상위 팀 전체 사원수           
+	private String upper_org_tot_emp;  
+	//사용자 상위 팀 평균              
+	private String upper_avg;
+	//전사 평균             
+	private String avg_val;
+	
+	
+	
+	public String getEmp_no() {
+		return emp_no;
+	}
+	public void setEmp_no(String emp_no) {
+		this.emp_no = emp_no;
+	}
+	public String getEmp_nm() {
+		return emp_nm;
+	}
+	public void setEmp_nm(String emp_nm) {
+		this.emp_nm = emp_nm;
+	}
+	public String getRgdt_date() {
+		return rgdt_date;
+	}
+	public void setRgdt_date(String rgdt_date) {
+		this.rgdt_date = rgdt_date;
+	}
+	public String getScor_curr() {
+		return scor_curr;
+	}
+	public void setScor_curr(String scor_curr) {
+		this.scor_curr = scor_curr;
+	}
+	public String getScore() {
+		return score;
+	}
+	public void setScore(String score) {
+		this.score = score;
+	}
+	public String getYear_val() {
+		return year_val;
+	}
+	public void setYear_val(String year_val) {
+		this.year_val = year_val;
+	}
+	public String getDay_val() {
+		return day_val;
+	}
+	public void setDay_val(String day_val) {
+		this.day_val = day_val;
+	}
+	public String getMonth_val() {
+		return month_val;
+	}
+	public void setMonth_val(String month_val) {
+		this.month_val = month_val;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	public String getU_org_code() {
+		return u_org_code;
+	}
+	public void setU_org_code(String u_org_code) {
+		this.u_org_code = u_org_code;
+	}
+	public String getU_org_nm() {
+		return u_org_nm;
+	}
+	public void setU_org_nm(String u_org_nm) {
+		this.u_org_nm = u_org_nm;
+	}
+	public String getU_tot_emp() {
+		return u_tot_emp;
+	}
+	public void setU_tot_emp(String u_tot_emp) {
+		this.u_tot_emp = u_tot_emp;
+	}
+	public String getU_avg() {
+		return u_avg;
+	}
+	public void setU_avg(String u_avg) {
+		this.u_avg = u_avg;
+	}
+	public String getUpper_org_code() {
+		return upper_org_code;
+	}
+	public void setUpper_org_code(String upper_org_code) {
+		this.upper_org_code = upper_org_code;
+	}
+	public String getUpper_org_nm() {
+		return upper_org_nm;
+	}
+	public void setUpper_org_nm(String upper_org_nm) {
+		this.upper_org_nm = upper_org_nm;
+	}
+	public String getUpper_org_tot_emp() {
+		return upper_org_tot_emp;
+	}
+	public void setUpper_org_tot_emp(String upper_org_tot_emp) {
+		this.upper_org_tot_emp = upper_org_tot_emp;
+	}
+	public String getUpper_avg() {
+		return upper_avg;
+	}
+	public void setUpper_avg(String upper_avg) {
+		this.upper_avg = upper_avg;
+	}  
+	
+	
+	
+}

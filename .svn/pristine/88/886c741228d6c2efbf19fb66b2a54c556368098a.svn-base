@@ -1,0 +1,16 @@
+package sdiag.main.service;
+import java.util.HashMap;
+
+import sdiag.man.service.SearchVO;
+
+public interface UserMainService {
+
+	/**
+	 *  공지사항 LIST
+	 * @param searchVO
+	 * @return
+	 * @throws Exception
+	 */
+	public HashMap<String,Object> getNoticeList(SearchVO searchVO) throws Exception;
+
+}

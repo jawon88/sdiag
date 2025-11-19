@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="userMain">
+
+	<typeAlias alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	<typeAlias alias="noticeVO" type="sdiag.board.service.NoticeVO"/>
+	<typeAlias alias="searchVO" type="sdiag.man.service.SearchVO"/>
+	 
+	
+	
+	<!-- 공지사항 LIST -->
+	<select id="userMain.getNoticeList" parameterClass="searchVO"  resultClass="noticeVO">
+ 	<![CDATA[
+ 		SELECT 
+			N.sq_no,
+  			N.n_type,
+  			N.contents,
+  			N.title,
+  			N.read_cnt,
+  			N.status_cd,
+  			to_char(N.upd_date, 'YYYY-MM-DD') upd_date,
+  			N.is_popup,
+  			U.emp_nm upd_user
+		FROM "notice_info" N
+		LEFT JOIN "org_user" U ON N.upd_user=U.emp_no
+		WHERE n_type='0000'
+		order by upd_date desc
+		LIMIT 5
+ 	]]>
+ 	</select>
+ 	
+</sqlMap>

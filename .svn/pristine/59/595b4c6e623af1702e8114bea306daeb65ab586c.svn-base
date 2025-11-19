@@ -1,0 +1,19 @@
+package sdiag.main.service.impl;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import sdiag.board.service.NoticeVO;
+import sdiag.man.service.SearchVO;
+import egovframework.rte.psl.dataaccess.EgovAbstractDAO;
+
+@Repository("UserMainDAO")
+public class UserMainDAO extends EgovAbstractDAO {
+	
+	// 공지사항 LIST
+	public List<NoticeVO> getNoticeList(SearchVO searchVO) throws Exception{
+		List<NoticeVO> list = (List<NoticeVO>)list("userMain.getNoticeList", searchVO);
+		return list;
+	}
+}

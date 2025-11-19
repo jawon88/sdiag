@@ -1,0 +1,81 @@
+package sdiag.report.service.impl;
+
+import java.util.HashMap;
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import sdiag.dash.service.DashboardSearchVO;
+import sdiag.exanal.service.PolVO;
+import egovframework.rte.psl.dataaccess.EgovAbstractDAO;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+@Repository("ReportDAO")
+public class ReportDAO extends EgovAbstractDAO{
+
+	public List getPersonalPolcount(DashboardSearchVO searchVO) {
+		return list("ReportDAO.getPersonalPolcount", searchVO);
+	}	
+	
+	public List getOrgPolItemCountScoreStatus(DashboardSearchVO searchVO) {
+		return list("ReportDAO.getOrgPolItemCountScoreStatus",searchVO);
+	}
+	
+	public List getOrgPolItemCountScoreStatusBuseo(DashboardSearchVO searchVO) {
+		return list("ReportDAO.getOrgPolItemCountScoreStatusBuseo",searchVO);
+	}
+
+	public List getOrgDiagItemCountScoreStatus(DashboardSearchVO searchVO) {
+		return list("ReportDAO.getOrgDiagItemCountScoreStatus",searchVO);
+	}
+	public List getOrgDiagItemCountScoreStatusBuseo(DashboardSearchVO searchVO) {
+		return list("ReportDAO.getOrgDiagItemCountScoreStatusBuseo",searchVO);
+	}
+
+	/**
+	 * 
+	 * @param searchVO
+	 * @return
+	 */
+	public List getOrgPolTotcountAvg(DashboardSearchVO searchVO) {
+		return list("ReportDAO.getOrgPolTotcountAvg",searchVO);
+	}
+	public List getOrgPolTotcountAvgBuseo(DashboardSearchVO searchVO) {
+		return list("ReportDAO.getOrgPolTotcountAvgBuseo",searchVO);
+	}
+
+	public List getPerCountScoreStatus(DashboardSearchVO searchVO) {
+		return list("ReportDAO.getPerCountScoreStatus",searchVO);
+	}
+
+	public List getPerPolItemCountScoreStatus(DashboardSearchVO searchVO) {
+		return list("ReportDAO.getPerPolItemCountScoreStatus",searchVO);
+	}
+
+	public String getOrgSelectName(DashboardSearchVO searchVO) {
+		// TODO Auto-generated method stub
+		return (String) select("ReportDAO.getOrgSelectName",searchVO);
+	}
+
+	public List<HashMap<String, Object>> getOrgPolItemCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) {
+		return (List<HashMap<String, Object>>)list("ReportDAO.getOrgPolItemCountScoreStatusExportExcel", searchVO);
+	}
+
+	public List<HashMap<String, Object>> getOrgDiagItemCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) {
+		// TODO Auto-generated method stub
+		return (List<HashMap<String, Object>>)list("ReportDAO.getOrgDiagItemCountScoreStatusExportExcel", searchVO);
+	}
+
+	public List<HashMap<String, Object>> getPerCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) {
+		return (List<HashMap<String, Object>>)list("ReportDAO.getPerCountScoreStatusExportExcel", searchVO);
+	}
+
+	public List<HashMap<String, Object>> getPerPolItemCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) {
+		return (List<HashMap<String, Object>>)list("ReportDAO.getPerPolItemCountScoreStatusExportExcel", searchVO);
+	}
+
+}

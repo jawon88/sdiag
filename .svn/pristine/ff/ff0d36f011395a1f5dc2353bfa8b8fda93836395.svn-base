@@ -1,0 +1,31 @@
+package sdiag.main.service.impl;
+
+import java.util.HashMap;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import sdiag.main.service.UserMainService;
+import sdiag.board.service.NoticeVO;
+import sdiag.man.service.SearchVO;
+
+@Service("UserMainService")
+public class UserMainServiceImpl implements UserMainService{
+	@Resource(name = "UserMainDAO")
+	private UserMainDAO UserMainDao;
+	
+	/**
+	 *  공지사항 LIST
+	 */
+	public HashMap<String,Object> getNoticeList(SearchVO searchVO) throws Exception{
+		List<NoticeVO> List = UserMainDao.getNoticeList(searchVO);
+		
+		HashMap<String,Object> rMap = new HashMap<String,Object>();
+		rMap.put("list", List);
+		
+		return rMap;
+	}
+	
+}

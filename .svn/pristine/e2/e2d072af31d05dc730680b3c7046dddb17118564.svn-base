@@ -1,0 +1,99 @@
+package sdiag.report.service.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.io.InputStream;
+import java.sql.SQLException;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+import sdiag.dash.service.DashboardSearchVO;
+import sdiag.report.service.ReportService;
+
+@Service("ReportService")
+public class ReportServiceImpl implements ReportService {
+	
+	@Resource(name = "ReportDAO")
+	private ReportDAO reportDAO;	
+	
+	@Override
+	public List<EgovMap> getPersonalPolcount(DashboardSearchVO searchVO)
+			throws Exception {
+		return reportDAO.getPersonalPolcount(searchVO);
+	}	
+	
+	public List getOrgPolItemCountScoreStatus(DashboardSearchVO searchVO) throws Exception {
+		if(searchVO.getBuseoType().equals("Y")){
+			return reportDAO.getOrgPolItemCountScoreStatusBuseo(searchVO);
+		}else{
+			return reportDAO.getOrgPolItemCountScoreStatus(searchVO);
+		}
+		
+	}
+
+	@Override
+	public List<EgovMap> getOrgDiagItemCountScoreStatus(DashboardSearchVO searchVO) {
+		if(searchVO.getBuseoType().equals("Y")){
+			return reportDAO.getOrgDiagItemCountScoreStatusBuseo(searchVO);
+		}else{
+			return reportDAO.getOrgDiagItemCountScoreStatus(searchVO);
+		}
+		
+	}
+
+	@Override
+	public List<EgovMap> getOrgPolTotcountAvg(DashboardSearchVO searchVO) throws Exception {
+		if(searchVO.getBuseoType().equals("Y")){
+			return reportDAO.getOrgPolTotcountAvgBuseo(searchVO);
+		}else{
+			return reportDAO.getOrgPolTotcountAvg(searchVO);
+		}
+		
+	}
+
+	@Override
+	public List<EgovMap> getPerCountScoreStatus(DashboardSearchVO searchVO) throws Exception {
+		return reportDAO.getPerCountScoreStatus(searchVO);
+	}
+
+	@Override
+	public List<EgovMap> getPerPolItemCountScoreStatus(DashboardSearchVO searchVO)
+			throws Exception {
+		return reportDAO.getPerPolItemCountScoreStatus(searchVO);
+	}
+
+	@Override
+	public String getOrgSelectName(DashboardSearchVO searchVO) throws Exception {
+		// TODO Auto-generated method stub
+		return (String)reportDAO.getOrgSelectName(searchVO);
+	}
+
+	@Override
+	public List<HashMap<String, Object>> getOrgPolItemCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) throws Exception {
+		return reportDAO.getOrgPolItemCountScoreStatusExportExcel(searchVO);
+	}
+
+	@Override
+	public List<HashMap<String, Object>> getOrgDiagItemCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) throws Exception {
+		return reportDAO.getOrgDiagItemCountScoreStatusExportExcel(searchVO);
+	}
+
+	@Override
+	public List<HashMap<String, Object>> getPerCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) throws Exception {
+		return reportDAO.getPerCountScoreStatusExportExcel(searchVO);
+	}
+
+	@Override
+	public List<HashMap<String, Object>> getPerPolItemCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) throws Exception {
+		return reportDAO.getPerPolItemCountScoreStatusExportExcel(searchVO);
+	}
+
+
+}

@@ -1,0 +1,36 @@
+package sdiag.report.service;
+
+import java.util.HashMap;
+import java.util.List;
+
+import sdiag.dash.service.DashboardSearchVO;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+public interface ReportService {
+	List<EgovMap> getPersonalPolcount(DashboardSearchVO searchVO) throws Exception;
+	
+	List<EgovMap> getOrgPolItemCountScoreStatus(DashboardSearchVO searchVO) throws Exception;
+
+	List<EgovMap> getOrgDiagItemCountScoreStatus(DashboardSearchVO searchVO) throws Exception;
+
+	List<EgovMap> getOrgPolTotcountAvg(DashboardSearchVO searchVO) throws Exception;
+
+	List<EgovMap> getPerCountScoreStatus(DashboardSearchVO searchVO) throws Exception;
+
+	List<EgovMap> getPerPolItemCountScoreStatus(DashboardSearchVO searchVO) throws Exception;
+
+	String getOrgSelectName(DashboardSearchVO searchVO) throws Exception;
+
+	List<HashMap<String, Object>> getOrgPolItemCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) throws Exception;
+
+	List<HashMap<String, Object>> getOrgDiagItemCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) throws Exception;
+
+	List<HashMap<String, Object>> getPerCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) throws Exception;
+
+	List<HashMap<String, Object>> getPerPolItemCountScoreStatusExportExcel(
+			DashboardSearchVO searchVO) throws Exception;
+
+}
